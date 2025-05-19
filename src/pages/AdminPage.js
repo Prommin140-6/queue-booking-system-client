@@ -4,6 +4,7 @@ import { Button, Card, Col, Input, Row, Statistic, Table, Tag, Tooltip, Space, M
 import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, ExclamationCircleOutlined, SearchOutlined, CalendarOutlined, HomeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './AdminPage.css';
 
 const { confirm } = Modal;
@@ -11,7 +12,7 @@ const { confirm } = Modal;
 const AdminPage = () => {
   const [bookings, setBookings] = useState([]);
   const [pendingBookings, setPendingBookings] = useState([]);
-  const [confirmedBookings, setConfirmedBookings] = useState([]);
+  const [acceptedBookings, setAcceptedBookings] = useState([]); // เปลี่ยนจาก confirmedBookings เป็น acceptedBookings
   const [summary, setSummary] = useState({});
   const [searchText, setSearchText] = useState('');
   const [filterDate, setFilterDate] = useState(null);
@@ -46,12 +47,13 @@ const AdminPage = () => {
       });
     }
     setPendingBookings(filtered.filter(b => b.status === 'pending'));
-    setConfirmedBookings(filtered.filter(b => b.status === 'accepted')); // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
+    setAcceptedBookings(filtered.filter(b => b.status === 'accepted')); // เปลี่ยนจาก confirmed เป็น accepted
   };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
+      message.error('กรุณาเข้าสู่ระบบ');
       navigate('/admin/login');
       return;
     }
@@ -77,44 +79,53 @@ const AdminPage = () => {
       } catch (error) {
         if (error.response && error.response.status === 401) {
           localStorage.removeItem('token');
+          message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
           navigate('/admin/login');
         } else {
           message.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-          console.error('API error:', error);
+          console.error('API error:', error.response?.data || error.message);
         }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchData();
   }, [navigate, searchText, filterDate]);
 
-const handleStatusUpdate = async (id, status) => {
-  setLoading(true);
-  console.log('Sending status to server:', status); // Debug
-  try {
-    const token = localStorage.getItem('token');
-    const response = await axios.patch(
-      `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
-      { status: status === 'confirmed' ? 'accepted' : status }, // แปลง 'confirmed' เป็น 'accepted' ถ้าจำเป็น
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+  const handleStatusUpdate = async (id, status) => {
+    setLoading(true);
+    console.log('Sending status to server:', status); // Debug
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
+      );
+      const updatedBookings = bookings.map(booking =>
+        booking._id === id ? { ...booking, status } : booking
+      );
+      setBookings(updatedBookings);
+      filterBookings(searchText, filterDate, updatedBookings);
+      message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${errorMessage}`);
+      console.error('Error updating status:', error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+        navigate('/admin/login');
       }
-    );
-    const updatedBookings = bookings.map(booking =>
-      booking._id === id ? { ...booking, status } : booking
-    );
-    setBookings(updatedBookings);
-    filterBookings(searchText, filterDate, updatedBookings);
-    message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
-  } catch (error) {
-    console.error('Error updating status:', error.response?.data || error.message);
-    message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${error.response?.data?.message || error.message}`);
-  }
-  setLoading(false);
-};
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = (id) => {
     confirm({
@@ -137,10 +148,17 @@ const handleStatusUpdate = async (id, status) => {
           filterBookings(searchText, filterDate, updatedBookings);
           message.success('ลบการจองเรียบร้อย');
         } catch (error) {
-          message.error('ไม่สามารถลบการจองได้');
-          console.error('Error deleting booking:', error);
+          const errorMessage = error.response?.data?.message || error.message;
+          message.error(`ไม่สามารถลบการจองได้: ${errorMessage}`);
+          console.error('Error deleting booking:', error.response?.data || error.message);
+          if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+            navigate('/admin/login');
+          }
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       }
     });
   };
@@ -210,7 +228,7 @@ const handleStatusUpdate = async (id, status) => {
             color = 'orange';
             icon = <ExclamationCircleOutlined />;
             break;
-          case 'accepted': // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
+          case 'accepted':
             color = 'green';
             icon = <CheckCircleOutlined />;
             break;
@@ -237,7 +255,8 @@ const handleStatusUpdate = async (id, status) => {
                 <Button
                   type="primary"
                   icon={<CheckCircleOutlined />}
-                  onClick={() => handleStatusUpdate(record._id, 'accepted')} // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
+                  onClick={() => handleStatusUpdate(record._id, 'accepted')}
+                  loading={loading}
                 >
                   Confirm
                 </Button>
@@ -247,6 +266,7 @@ const handleStatusUpdate = async (id, status) => {
                   danger
                   icon={<CloseCircleOutlined />}
                   onClick={() => handleStatusUpdate(record._id, 'rejected')}
+                  loading={loading}
                 >
                   Reject
                 </Button>
@@ -260,6 +280,7 @@ const handleStatusUpdate = async (id, status) => {
                   danger
                   icon={<DeleteOutlined />}
                   onClick={() => handleDelete(record._id)}
+                  loading={loading}
                 >
                   Delete
                 </Button>
@@ -319,7 +340,7 @@ const handleStatusUpdate = async (id, status) => {
             <Statistic
               title="ยืนยันแล้ว"
               value={
-                summary.statusBreakdown?.find(s => s._id === 'accepted')?.count || 0 // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
+                summary.statusBreakdown?.find(s => s._id === 'accepted')?.count || 0
               }
               valueStyle={{ color: '#108ee9', fontWeight: 'bold' }}
             />
@@ -369,7 +390,7 @@ const handleStatusUpdate = async (id, status) => {
         <h2 className="text-xl font-semibold mb-3 text-gray-700">รายการยืนยันแล้ว</h2>
         <Table
           columns={columns}
-          dataSource={confirmedBookings}
+          dataSource={acceptedBookings}
           rowKey="_id"
           pagination={{ pageSize: 5 }}
           loading={loading}
