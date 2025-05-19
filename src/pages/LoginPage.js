@@ -9,6 +9,7 @@ function LoginPage() {
   const navigate = useNavigate();
   
   const onSubmit = async (data) => {
+    console.log('API URL:', process.env.REACT_APP_API_URL);
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/login`, data);
       localStorage.setItem('token', response.data.token);
