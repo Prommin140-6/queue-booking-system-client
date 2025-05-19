@@ -122,6 +122,20 @@ const BookingPage = () => {
         setDateOffset(dateOffset + datesPerPage);
     };
 
+    // ฟังก์ชันตรวจสอบเบอร์โทร
+    const validatePhoneNumber = (_, value) => {
+        if (!value) {
+            return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
+        }
+        // ลบ - ออกก่อนตรวจสอบ
+        const cleanedValue = value.replace(/-/g, '');
+        const phoneRegex = /^0[0-9]{9}$/;
+        if (!phoneRegex.test(cleanedValue)) {
+            return Promise.reject(new Error('เบอร์โทรต้องมี 10 หลัก เริ่มต้นด้วย 0 และเป็นตัวเลขเท่านั้น'));
+        }
+        return Promise.resolve();
+    };
+
     return (
         <div className="min-h-screen bg-[#121212] text-white p-6 flex items-center justify-center">
             <div className="w-full max-w-md bg-[#1f1f1f] rounded-xl shadow-2xl p-8 border border-[#896253]">
@@ -230,11 +244,15 @@ const BookingPage = () => {
                     <Form.Item
                         name="phone"
                         label={<span className="text-gray-400 font-semibold uppercase tracking-wider">เบอร์โทร</span>}
-                        rules={[{ required: true, message: 'กรุณากรอกเบอร์โทร' }]}
+                        rules={[
+                            { required: true, message: 'กรุณากรอกเบอร์โทร' },
+                            { validator: validatePhoneNumber } // เพิ่มการตรวจสอบเบอร์โทร
+                        ]}
                     >
                         <Input
-                            placeholder="กรอกเบอร์โทร"
+                            placeholder="กรอกเบอร์โทร (เช่น 0812345678)"
                             className="rounded-lg border border-[#896253] bg-[#2a2a2a] text-[#CD9969] focus:ring-2 focus:ring-[#CD9969] focus:border-[#CD9969] placeholder-[#8a7d5a]"
+                            maxLength={10} // จำกัดความยาวสูงสุด 10 ตัว
                         />
                     </Form.Item>
 
