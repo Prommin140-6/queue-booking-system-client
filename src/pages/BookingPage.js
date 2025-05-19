@@ -31,7 +31,7 @@ const BookingPage = () => {
             try {
                 const dateStr = selectedDate.toISOString().slice(0, 10);
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings/booked-times?date=${dateStr}`);
-                setBookedTimes(response.data.bookedTimes);
+                setBookedTimes(response.data.bookedTimes || []); // ตรวจสอบว่า data.bookedTimes มีค่า
             } catch (error) {
                 console.error('Failed to load booked times', error);
                 setBookedTimes([]);
@@ -75,6 +75,8 @@ const BookingPage = () => {
             setTimeError('');
             setShowDatePicker(false);
             setDateOffset(0);
+            // รีเฟรช bookedTimes หลังจองสำเร็จ
+            await fetchBookedTimes();
         } catch (error) {
             if (error.response?.data?.message === 'เวลา\nเต็ม') {
                 setTimeError('เวลานี้เต็มแล้ว');
@@ -97,6 +99,8 @@ const BookingPage = () => {
         }
         setSelectedTime(null);
         setTimeError('');
+        // รีเฟรช bookedTimes เมื่อเปลี่ยนวันที่
+        fetchBookedTimes();
     };
 
     const handleTimeChange = (time) => {
@@ -127,10 +131,8 @@ const BookingPage = () => {
         if (!value) {
             return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
         }
-        // ลบ - ออกก่อนตรวจสอบ
-        const cleanedValue = value.replace(/-/g, '');
         const phoneRegex = /^0[0-9]{9}$/;
-        if (!phoneRegex.test(cleanedValue)) {
+        if (!phoneRegex.test(value)) {
             return Promise.reject(new Error('เบอร์โทรต้องมี 10 หลัก เริ่มต้นด้วย 0 และเป็นตัวเลขเท่านั้น'));
         }
         return Promise.resolve();
@@ -246,13 +248,13 @@ const BookingPage = () => {
                         label={<span className="text-gray-400 font-semibold uppercase tracking-wider">เบอร์โทร</span>}
                         rules={[
                             { required: true, message: 'กรุณากรอกเบอร์โทร' },
-                            { validator: validatePhoneNumber } // เพิ่มการตรวจสอบเบอร์โทร
+                            { validator: validatePhoneNumber }
                         ]}
                     >
                         <Input
                             placeholder="กรอกเบอร์โทร (เช่น 0812345678)"
                             className="rounded-lg border border-[#896253] bg-[#2a2a2a] text-[#CD9969] focus:ring-2 focus:ring-[#CD9969] focus:border-[#CD9969] placeholder-[#8a7d5a]"
-                            maxLength={10} // จำกัดความยาวสูงสุด 10 ตัว
+                            maxLength={10}
                         />
                     </Form.Item>
 
