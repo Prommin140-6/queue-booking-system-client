@@ -10,7 +10,7 @@ function LoginPage() {
   
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/login', data);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/admin/login`, data);
       localStorage.setItem('token', response.data.token);
       navigate('/admin');
     } catch (error) {
