@@ -46,7 +46,7 @@ const AdminPage = () => {
       });
     }
     setPendingBookings(filtered.filter(b => b.status === 'pending'));
-    setConfirmedBookings(filtered.filter(b => b.status === 'confirmed'));
+    setConfirmedBookings(filtered.filter(b => b.status === 'accepted')); // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
   };
 
   useEffect(() => {
@@ -91,6 +91,7 @@ const AdminPage = () => {
 
   const handleStatusUpdate = async (id, status) => {
     setLoading(true);
+    console.log('Sending status:', status); // เพิ่ม Debug
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
@@ -109,7 +110,7 @@ const AdminPage = () => {
       filterBookings(searchText, filterDate, updatedBookings);
       message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
     } catch (error) {
-      message.error('ไม่สามารถเปลี่ยนสถานะได้');
+      message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${error.message}`);
       console.error('Error updating status:', error);
     }
     setLoading(false);
@@ -209,7 +210,7 @@ const AdminPage = () => {
             color = 'orange';
             icon = <ExclamationCircleOutlined />;
             break;
-          case 'confirmed':
+          case 'accepted': // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
             color = 'green';
             icon = <CheckCircleOutlined />;
             break;
@@ -217,6 +218,8 @@ const AdminPage = () => {
             color = 'red';
             icon = <CloseCircleOutlined />;
             break;
+          default:
+            color = 'default';
         }
         return <Tag icon={icon} color={color}>{status.toUpperCase()}</Tag>;
       }
@@ -234,7 +237,7 @@ const AdminPage = () => {
                 <Button
                   type="primary"
                   icon={<CheckCircleOutlined />}
-                  onClick={() => handleStatusUpdate(record._id, 'confirmed')}
+                  onClick={() => handleStatusUpdate(record._id, 'accepted')} // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
                 >
                   Confirm
                 </Button>
@@ -250,7 +253,7 @@ const AdminPage = () => {
               </Tooltip>
             </>
           )}
-          {record.status === 'confirmed' && (
+          {record.status === 'accepted' && (
             <>
               <Tooltip title="ลบการจอง">
                 <Button
@@ -316,7 +319,7 @@ const AdminPage = () => {
             <Statistic
               title="ยืนยันแล้ว"
               value={
-                summary.statusBreakdown?.find(s => s._id === 'confirmed')?.count || 0
+                summary.statusBreakdown?.find(s => s._id === 'accepted')?.count || 0 // เปลี่ยนจาก 'confirmed' เป็น 'accepted'
               }
               valueStyle={{ color: '#108ee9', fontWeight: 'bold' }}
             />
