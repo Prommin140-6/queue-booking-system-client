@@ -59,13 +59,12 @@ const AdminPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        const bookingsRes = await axios.get(`${API_URL}/api/bookings`, {
+        const bookingsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        const summaryRes = await axios.get(`${API_URL}/api/bookings/summary`, {
+        const summaryRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings/summary`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -93,10 +92,9 @@ const AdminPage = () => {
   const handleStatusUpdate = async (id, status) => {
     setLoading(true);
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${API_URL}/api/bookings/${id}`,
+        `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
         { status },
         {
           headers: {
@@ -127,9 +125,8 @@ const AdminPage = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
           const token = localStorage.getItem('token');
-          await axios.delete(`${API_URL}/api/bookings/${id}`, {
+          await axios.delete(`${process.env.REACT_APP_API_URL}/api/bookings/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`
             }

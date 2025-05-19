@@ -30,7 +30,7 @@ const BookingPage = () => {
         async function fetchBookedTimes() {
             try {
                 const dateStr = selectedDate.toISOString().slice(0, 10);
-                const response = await axios.get(`http://localhost:5000/api/bookings/booked-times?date=${dateStr}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings/booked-times?date=${dateStr}`);
                 setBookedTimes(response.data.bookedTimes);
             } catch (error) {
                 console.error('Failed to load booked times', error);
@@ -62,7 +62,7 @@ const BookingPage = () => {
                 date: selectedDate,
                 time: selectedTime,
             };
-            await axios.post('http://localhost:5000/api/bookings', bookingData);
+            await axios.post(`${process.env.REACT_APP_API_URL}/api/bookings`, bookingData);
             Swal.fire({
                 icon: 'success',
                 title: 'จองคิวเรียบร้อยแล้ว',
