@@ -93,39 +93,39 @@ const AdminPage = () => {
     fetchData();
   }, [navigate, searchText, filterDate]);
 
-  const handleStatusUpdate = async (id, status) => {
-    setLoading(true);
-    console.log('Sending status to server:', status); // Debug
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch(
-        `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+const handleStatusUpdate = async (id, status) => {
+  setLoading(true);
+  console.log('Sending status to server:', status); // Debug
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.patch(
+      `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
+      { status },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      );
-      const updatedBookings = bookings.map(booking =>
-        booking._id === id ? { ...booking, status } : booking
-      );
-      setBookings(updatedBookings);
-      filterBookings(searchText, filterDate, updatedBookings);
-      message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message;
-      message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${errorMessage}`);
-      console.error('Error updating status:', error.response?.data || error.message);
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
-        navigate('/admin/login');
       }
-    } finally {
-      setLoading(false);
+    );
+    const updatedBookings = bookings.map(booking =>
+      booking._id === id ? { ...booking, status } : booking
+    );
+    setBookings(updatedBookings);
+    filterBookings(searchText, filterDate, updatedBookings);
+    message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message;
+    message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${errorMessage}`);
+    console.error('Error updating status:', error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+      navigate('/admin/login');
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDelete = (id) => {
     confirm({
