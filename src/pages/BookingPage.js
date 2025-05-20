@@ -27,7 +27,6 @@ const BookingPage = () => {
 
   const availableTimes = ['10:00', '11:00', '13:00'];
 
-  // ฟังก์ชันดึงเวลาที่ถูกจองแล้ว
   const fetchBookedTimes = async (date) => {
     try {
       const dateStr = date.toISOString().slice(0, 10);
@@ -80,7 +79,7 @@ const BookingPage = () => {
       setTimeError('');
       setShowDatePicker(false);
       setDateOffset(0);
-      await fetchBookedTimes(new Date()); // รีเฟรช bookedTimes หลังจองสำเร็จ
+      await fetchBookedTimes(new Date());
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
       if (errorMessage === 'เวลา\nเต็ม') {
@@ -108,7 +107,7 @@ const BookingPage = () => {
       }
       setSelectedTime(null);
       setTimeError('');
-      fetchBookedTimes(date); // รีเฟรช bookedTimes เมื่อเปลี่ยนวันที่
+      fetchBookedTimes(date);
     }
   };
 
@@ -137,7 +136,6 @@ const BookingPage = () => {
     setDateOffset(dateOffset + datesPerPage);
   };
 
-  // ฟังก์ชันตรวจสอบเบอร์โทร
   const validatePhoneNumber = (_, value) => {
     if (!value) {
       return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
@@ -307,7 +305,6 @@ const BookingPage = () => {
   );
 };
 
-// ฟังก์ชันตรวจสอบเบอร์โทร
 const validatePhoneNumber = (_, value) => {
   if (!value) {
     return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
